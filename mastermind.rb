@@ -1,33 +1,16 @@
 # frozen_string_literal: true
 
-# Text
-module Text
-  def ask_guess
-    puts 'Give me your best shot! Choose 4 numbers between 1 and 6.'
-  end
-
-  def wrong_format
-    puts 'Try again. Choose 4 numbers between 1 and 6.'
-  end
-
-  def end_msg(compare)
-    if compare
-      puts 'You win! You sly dog!'
-    else
-      puts 'Time is up. You suck.'
-    end
-  end
-end
+require './text'
 
 # Mastermind
 class Mastermind
   include Text
 
-  TURNS = 12
+  TURNS = 5
   COLORS = 6
   PEGS = 4
 
-  attr_reader :code, :guess
+  # attr_reader :code, :guess
 
   def initialize
     @code = []
@@ -38,8 +21,15 @@ class Mastermind
     PEGS.times { @code << rand(1..COLORS) }
   end
 
-  def input_guess
-    gets.chomp.to_i.digits.reverse
+  def to_sym(arr)
+    result = []
+    arr[0].times { result << 'X' }
+    arr[1].times { result << 'O' }
+    result.join
+  end
+
+  def compare_code
+    @guess == @code
   end
 
   def check_guess
@@ -48,12 +38,29 @@ class Mastermind
     false
   end
 
-  def retrieve_guess
+  def input_guess
     ask_guess
     until check_guess
-      @guess = input_guess
+      @guess = gets.chomp
+      quit
+      @guess = @guess.to_i.digits.reverse
       wrong_format unless check_guess
     end
+  end
+
+  def quit
+    return unless @guess.include?('q')
+
+    answer = %w[y n]
+    response = ''
+    until answer.include?(response)
+      puts 'Are you sure you want to quit?(y/n)'
+
+      response = gets.chomp
+
+      abort 'BYE:)' if response == 'y'
+    end
+    puts 'Still in the game I see!'
   end
 
   def hint
@@ -68,27 +75,16 @@ class Mastermind
     end
 
     hints << (@guess.uniq - ignore).count { |x| @code.include?(x) }
-    to_sym(hints)
+    puts "CLues:  #{to_sym(hints)}\n\n"
   end
 
-  def to_sym(arr)
-    result = []
-    arr[0].times { result << 'X' }
-    arr[1].times { result << 'O' }
-    result
-  end
-
-  def compare_code
-    @guess == @code
-  end
-
-  def user_input
+  def game
     count = 0
 
     TURNS.times do
       puts "Turn #{count += 1}"
-      retrieve_guess
-      p hint
+      input_guess
+      hint
 
       break if compare_code
 
@@ -98,9 +94,8 @@ class Mastermind
 
   def play
     mk_code
-    # p @code
-    user_input
-    end_msg(compare_code)
+    game
+    end_msg(compare_code, @code)
   end
 end
 
