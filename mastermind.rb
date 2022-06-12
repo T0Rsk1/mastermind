@@ -1,7 +1,28 @@
 # frozen_string_literal: true
 
+# Text
+module Text
+  def ask_guess
+    puts 'Give me your best shot! Choose 4 numbers between 1 and 6.'
+  end
+
+  def wrong_format
+    puts 'Try again. Choose 4 numbers between 1 and 6.'
+  end
+
+  def end_msg(compare)
+    if compare
+      puts 'You win! You sly dog!'
+    else
+      puts 'Time is up. You suck.'
+    end
+  end
+end
+
 # Mastermind
 class Mastermind
+  include Text
+
   TURNS = 12
   COLORS = 6
   PEGS = 4
@@ -21,26 +42,10 @@ class Mastermind
     gets.chomp.to_i.digits.reverse
   end
 
-  def ask_guess
-    puts 'Give me your best shot! Choose 4 numbers between 1 and 6.'
-  end
-
   def check_guess
     return true if @guess.size == 4 && @guess.all? { |x| x <= 6 && x.positive? }
 
     false
-  end
-
-  def wrong_format
-    puts 'Try again. Choose 4 numbers between 1 and 6.'
-  end
-
-  def end_msg(compare)
-    if compare
-      puts 'You win! You sly dog!'
-    else
-      puts 'Time is up. You suck.'
-    end
   end
 
   def retrieve_guess
