@@ -6,7 +6,7 @@ require './text'
 class Mastermind
   include Text
 
-  TURNS = 5
+  TURNS = 12
   COLORS = 6
   PEGS = 4
 
@@ -75,7 +75,7 @@ class Mastermind
     end
 
     hints << (@guess.uniq - ignore).count { |x| @code.include?(x) }
-    puts "CLues:  #{to_sym(hints)}\n\n"
+    puts "CLues: #{to_sym(hints)}\n\n"
   end
 
   def game
