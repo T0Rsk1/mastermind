@@ -10,14 +10,14 @@ class Mastermind
   COLORS = 6
   PEGS = 4
 
-  # attr_reader :code, :guess
-
   def initialize
     @code = []
     @guess = []
+    @hints = []
+    @mode = ''
   end
 
-  def mk_code
+  def computer_code
     PEGS.times { @code << rand(1..COLORS) }
   end
 
@@ -32,58 +32,97 @@ class Mastermind
     @guess == @code
   end
 
-  def check_guess
-    return true if @guess.size == 4 && @guess.all? { |x| x <= 6 && x.positive? }
-
-    false
+  def check(input)
+    input.size == 4 && input.all? { |x| x <= 6 && x.positive? }
   end
 
-  def input_guess
-    ask_guess
-    until check_guess
+  def check_mode
+    %w[b m].include?(@mode)
+  end
+
+  def player_guess
+    until check(@guess)
       @guess = gets.chomp
       quit
       @guess = @guess.to_i.digits.reverse
-      wrong_format unless check_guess
+      puts wrong_format(:code) unless check(@guess)
+    end
+  end
+
+  def player_code
+    until check(@code)
+      @code = gets.chomp.to_i.digits.reverse
+      puts wrong_format(:code) unless check(@code)
     end
   end
 
   def quit
-    return unless @guess.include?('q')
+    return unless @guess == 'q'
 
-    answer = %w[y n]
     response = ''
-    until answer.include?(response)
-      puts 'Are you sure you want to quit?(y/n)'
-
+    until %w[y n].include?(response)
+      puts quit_msg
       response = gets.chomp
 
       abort 'BYE:)' if response == 'y'
     end
-    puts 'Still in the game I see!'
+
+    puts in_the_game
   end
 
   def hint
-    hints = []
+    @hints = []
     ignore = []
 
-    hints << @guess.zip(@code).count do |x|
+    @hints << @guess.zip(@code).count do |x|
       if x.inject(:eql?)
         ignore << x[0]
         true
       end
     end
 
-    hints << (@guess.uniq - ignore).count { |x| @code.include?(x) }
-    puts "CLues: #{to_sym(hints)}\n\n"
+    @hints << (@guess.uniq - ignore).count { |x| @code.include?(x) }
+    puts "CLues: #{to_sym(@hints)}\n\n"
+  end
+
+  def choose_mode
+    puts ask_mode
+    until check_mode
+      @mode = gets.chomp
+      puts wrong_format(:mode) unless check_mode
+    end
+  end
+
+  def player_game
+    player_guess
+  end
+
+  def computer_game
+    computer_guess
+  end
+
+  def game_type
+    @mode == 'b' ? player_game : computer_game
+  end
+
+  def start
+    choose_mode
+
+    if @mode == 'b'
+      computer_code
+    else
+      puts enter_code
+      player_code
+    end
   end
 
   def game
-    count = 0
+    start
 
-    TURNS.times do
-      puts "Turn #{count += 1}"
-      input_guess
+    TURNS.times do |i|
+      puts "Turn #{i + 1}"
+      ask_guess
+      game_type
       hint
 
       break if compare_code
@@ -92,10 +131,11 @@ class Mastermind
     end
   end
 
+  def computer_guess; end
+
   def play
-    mk_code
     game
-    end_msg(compare_code, @code)
+    puts end_msg
   end
 end
 
