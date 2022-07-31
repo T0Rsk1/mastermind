@@ -6,7 +6,7 @@ require './text'
 class Mastermind
   include Text
 
-  TURNS = 5
+  TURNS = 12
   COLORS = 6
   PEGS = 4
 
@@ -15,37 +15,24 @@ class Mastermind
     @guess = ''
     @hints = []
     @mode = ''
+    @code_list = (1..COLORS).to_a.permutation(PEGS).to_a # .map! { |code| code.join.to_s }
   end
 
-  def computer_code
-    @code = []
-    PEGS.times { @code << rand(1..COLORS) }
-    @code = @code.join.to_s
-  end
-
-  def to_sym(arr)
-    result = []
-    arr[0].times { result << 'X' }
-    arr[1].times { result << 'O' }
-    result.join
-  end
-
-  def check(code)
-    code.match?(/^[1-6]{4}$/)
-  end
-
-  def check_mode
-    %w[b m].include?(@mode)
-  end
-
-  def input_code
-    code = ''
-    until check(code)
-      code = gets.chomp
-      quit(code)
-      puts wrong_format(:code) unless check(code)
+  def choose_mode
+    puts ask(:mode)
+    until check_mode?
+      @mode = gets.chomp
+      puts wrong_format(:mode) unless check_mode?
     end
-    code
+  end
+
+  def create_code
+    if @mode == 'b'
+      random_code
+    else
+      puts enter_code
+      @code = input_code
+    end
   end
 
   def quit(input)
@@ -60,6 +47,52 @@ class Mastermind
     end
 
     puts in_the_game
+  end
+
+  def input_code
+    code = ''
+    until check_code?(code)
+      code = gets.chomp
+      quit(code)
+      puts wrong_format(:code) unless check_code?(code)
+    end
+    code
+  end
+
+  def computer_game; end
+
+  def play
+    game
+
+    if compare_code?
+      puts end_msg(:win)
+    else
+      puts end_msg(:lose)
+    end
+  end
+
+  private
+
+  def check_mode?
+    %w[b m].include?(@mode)
+  end
+
+  def check_code?(code)
+    code.match?(/^[1-#{COLORS}]{#{PEGS}}$/)
+  end
+
+  def compare_code?
+    @guess == @code
+  end
+
+  def random_code
+    @code = []
+    PEGS.times { @code << rand(1..COLORS) }
+    @code = @code.join.to_s
+  end
+
+  def game_type
+    @mode == 'b' ? @guess = input_code : computer_game
   end
 
   def hint(guess, code)
@@ -77,32 +110,18 @@ class Mastermind
     hints
   end
 
-  def choose_mode
-    puts ask(:mode)
-    until check_mode
-      @mode = gets.chomp
-      puts wrong_format(:mode) unless check_mode
-    end
-  end
-
-  def game_type
-    @mode == 'b' ? @guess = input_code : computer_game
-  end
-
-  def start
-    choose_mode
-
-    if @mode == 'b'
-      computer_code
-    else
-      puts enter_code
-      @code = input_code
-    end
+  def to_sym(arr)
+    result = []
+    arr[0].times { result << 'X' }
+    arr[1].times { result << 'O' }
+    result.join
   end
 
   def game
-    start
-    p @code
+    choose_mode
+    create_code
+    # p @code
+    p @code_list
     TURNS.times do |i|
       puts "Turn #{i + 1}"
       ask(:guess)
@@ -110,28 +129,10 @@ class Mastermind
       @hints = hint(@guess.to_i.digits, @code.to_i.digits)
       puts "CLues: #{to_sym(@hints)}\n\n"
 
-      break if compare_code
+      break if compare_code?
 
       @guess = ''
     end
-  end
-
-  def computer_game; end
-
-  def play
-    game
-
-    if compare_code
-      puts end_msg(:win)
-    else
-      puts end_msg(:lose)
-    end
-  end
-
-  private
-
-  def compare_code
-    @guess == @code
   end
 end
 

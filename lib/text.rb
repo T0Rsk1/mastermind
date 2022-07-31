@@ -11,7 +11,7 @@ module Text
 
   def wrong_format(input)
     {
-      code: 'Try again. Choose 4 numbers between 1 and 6.',
+      code: "Try again. Choose #{Mastermind::PEGS} numbers between 1 and #{Mastermind::COLORS}.",
       mode: 'Try again! Type b or m.'
     }[input]
   end
@@ -32,6 +32,6 @@ module Text
   end
 
   def enter_code
-    'Enter a 4 digit secret code using numbers 1-6: '
+    "Enter a #{Mastermind::PEGS} digit secret code using numbers 1-#{Mastermind::COLORS}: "
   end
 end
