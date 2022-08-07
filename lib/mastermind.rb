@@ -7,15 +7,15 @@ class Mastermind
   include Text
 
   TURNS = 12
-  COLORS = 6
+  COLORS = '6'
   PEGS = 4
 
   def initialize
     @code = ''
     @guess = ''
-    @hints = []
     @mode = ''
-    @code_list = (1..COLORS).to_a.permutation(PEGS).to_a # .map! { |code| code.join.to_s }
+    @hints = ''
+    @code_list = ('1'..COLORS).to_a.repeated_permutation(PEGS).to_a.map(&:join)
   end
 
   def choose_mode
@@ -50,6 +50,7 @@ class Mastermind
   end
 
   def input_code
+    @guess = ''
     code = ''
     until check_code?(code)
       code = gets.chomp
@@ -71,7 +72,7 @@ class Mastermind
     end
   end
 
-  private
+  # private
 
   def check_mode?
     %w[b m].include?(@mode)
@@ -86,9 +87,7 @@ class Mastermind
   end
 
   def random_code
-    @code = []
-    PEGS.times { @code << rand(1..COLORS) }
-    @code = @code.join.to_s
+    PEGS.times { @code += ('1'..COLORS).to_a.sample }
   end
 
   def game_type
@@ -96,42 +95,31 @@ class Mastermind
   end
 
   def hint(guess, code)
-    hints = []
-    ignore = []
+    hints = ''
 
-    hints << guess.zip(code).count do |x|
+    guess.zip(code).each do |x|
       if x.inject(:eql?)
-        ignore << x[0]
-        true
+        guess.delete(x[0])
+        hints += 'B'
       end
     end
 
-    hints << (guess.uniq - ignore).count { |x| code.include?(x) }
+    guess.uniq.each { |x| hints += 'W' if code.include?(x) }
     hints
-  end
-
-  def to_sym(arr)
-    result = []
-    arr[0].times { result << 'X' }
-    arr[1].times { result << 'O' }
-    result.join
   end
 
   def game
     choose_mode
     create_code
-    # p @code
-    p @code_list
+
     TURNS.times do |i|
       puts "Turn #{i + 1}"
       ask(:guess)
       game_type
       @hints = hint(@guess.to_i.digits, @code.to_i.digits)
-      puts "CLues: #{to_sym(@hints)}\n\n"
+      puts "CLues: #{@hints}\n\n"
 
       break if compare_code?
-
-      @guess = ''
     end
   end
 end
