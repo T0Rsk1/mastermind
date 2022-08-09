@@ -94,8 +94,58 @@ class Mastermind
     @mode == 'b' ? @guess = input_code : computer_game
   end
 
+  def possible_answer_list(guess)
+    possible_answers = {}
+
+    @code_list.each do |code|
+      hints = hint(guess, code)
+      if possible_answers.include?(hints)
+        possible_answers[hints] << code
+      else
+        possible_answers[hints] = [code]
+      end
+    end
+    possible_answers
+  end
+
+  def possible_next_guess_list
+    possible_guess = {}
+    @code_list.each { |code| possible_guess[code] = possible_answer_list(code) }
+    possible_guess
+  end
+
+  def guess_score(guesses)
+    scores = {}
+    max = 0
+
+    guesses.each do |guess, hints|
+      hints.each_value { |response| max = response.size if response.size > max }
+      scores[guess] = max
+      max = 0
+    end
+
+    scores
+  end
+
+  def choose_next_guess
+    next_guess = ''
+    scores = guess_score(possible_next_guess_list)
+    min = scores.values[0]
+
+    scores.each do |guess, score|
+      if score < min
+        min = score
+        next_guess = guess
+      end
+    end
+
+    next_guess
+  end
+
   def hint(guess, code)
     hints = ''
+    guess = guess.chars
+    code = code.chars
 
     guess.zip(code).each do |x|
       if x.inject(:eql?)
@@ -111,12 +161,13 @@ class Mastermind
   def game
     choose_mode
     create_code
+    p @code
 
     TURNS.times do |i|
       puts "Turn #{i + 1}"
       ask(:guess)
       game_type
-      @hints = hint(@guess.to_i.digits, @code.to_i.digits)
+      @hints = hint(@guess, @code)
       puts "CLues: #{@hints}\n\n"
 
       break if compare_code?
@@ -126,4 +177,6 @@ end
 
 game = Mastermind.new
 
-game.play
+# game.play
+p game.choose_next_guess
+# p game.guess_score(game.possible_next_guess_list)
