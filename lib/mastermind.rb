@@ -16,6 +16,9 @@ class Mastermind
     @mode = ''
     @hints = ''
     @code_list = ('1'..COLORS).to_a.repeated_permutation(PEGS).to_a.map(&:join)
+    @turns = 1
+    @possible_guesses = {}
+    # possible_next_guess_list
   end
 
   def choose_mode
@@ -52,15 +55,15 @@ class Mastermind
   def input_code
     @guess = ''
     code = ''
+
     until check_code?(code)
       code = gets.chomp
       quit(code)
       puts wrong_format(:code) unless check_code?(code)
     end
+
     code
   end
-
-  def computer_game; end
 
   def play
     game
@@ -94,6 +97,22 @@ class Mastermind
     @mode == 'b' ? @guess = input_code : computer_game
   end
 
+  def computer_game
+    if @turns == 1
+      @possible_guesses = possible_next_guess_list
+      @guess = '1122'
+    else
+      reduce_code_list
+      @guess = choose_next_guess
+      sleep(1.5)
+    end
+  end
+
+  def reduce_code_list
+    @code_list = @possible_guesses[@guess][@hints]
+    @possible_guesses = possible_next_guess_list
+  end
+
   def possible_answer_list(guess)
     possible_answers = {}
 
@@ -105,12 +124,15 @@ class Mastermind
         possible_answers[hints] = [code]
       end
     end
+
     possible_answers
   end
 
   def possible_next_guess_list
     possible_guess = {}
+
     @code_list.each { |code| possible_guess[code] = possible_answer_list(code) }
+
     possible_guess
   end
 
@@ -129,7 +151,7 @@ class Mastermind
 
   def choose_next_guess
     next_guess = ''
-    scores = guess_score(possible_next_guess_list)
+    scores = guess_score(@possible_guesses)
     min = scores.values[0]
 
     scores.each do |guess, score|
@@ -139,6 +161,7 @@ class Mastermind
       end
     end
 
+    next_guess = @code_list[0] if next_guess.empty?
     next_guess
   end
 
@@ -155,6 +178,9 @@ class Mastermind
     end
 
     guess.uniq.each { |x| hints += 'W' if code.include?(x) }
+
+    hints = '0' if hints.empty?
+
     hints
   end
 
@@ -163,20 +189,25 @@ class Mastermind
     create_code
     p @code
 
-    TURNS.times do |i|
-      puts "Turn #{i + 1}"
+    while @turns <= TURNS
+      puts "Turn #{@turns}"
       ask(:guess)
       game_type
       @hints = hint(@guess, @code)
-      puts "CLues: #{@hints}\n\n"
+      puts "Guess: #{@guess}"
+      puts "Clues: #{@hints}\n\n"
 
       break if compare_code?
+
+      @turns += 1
     end
   end
 end
 
 game = Mastermind.new
 
-# game.play
-p game.choose_next_guess
+game.play
+# p game.choose_next_guess
 # p game.guess_score(game.possible_next_guess_list)
+# p game.reduce_code_list
+# p game.computer_game
