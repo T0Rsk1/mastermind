@@ -18,7 +18,6 @@ class Mastermind
     @code_list = ('1'..COLORS).to_a.repeated_permutation(PEGS).to_a.map(&:join)
     @turns = 1
     @possible_guesses = {}
-    # possible_next_guess_list
   end
 
   def choose_mode
@@ -99,13 +98,13 @@ class Mastermind
 
   def computer_game
     if @turns == 1
-      @possible_guesses = possible_next_guess_list
       @guess = '1122'
+      @possible_guesses = possible_next_guess_list([@guess])
     else
       reduce_code_list
       @guess = choose_next_guess
-      sleep(1.5)
     end
+    sleep(1.5)
   end
 
   def reduce_code_list
@@ -128,10 +127,10 @@ class Mastermind
     possible_answers
   end
 
-  def possible_next_guess_list
+  def possible_next_guess_list(code_list = @code_list)
     possible_guess = {}
 
-    @code_list.each { |code| possible_guess[code] = possible_answer_list(code) }
+    code_list.each { |code| possible_guess[code] = possible_answer_list(code) }
 
     possible_guess
   end
@@ -179,15 +178,12 @@ class Mastermind
 
     guess.uniq.each { |x| hints += 'W' if code.include?(x) }
 
-    hints = '0' if hints.empty?
-
     hints
   end
 
   def game
     choose_mode
     create_code
-    p @code
 
     while @turns <= TURNS
       puts "Turn #{@turns}"
@@ -207,7 +203,3 @@ end
 game = Mastermind.new
 
 game.play
-# p game.choose_next_guess
-# p game.guess_score(game.possible_next_guess_list)
-# p game.reduce_code_list
-# p game.computer_game
